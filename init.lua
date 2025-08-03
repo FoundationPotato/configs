@@ -1,12 +1,30 @@
--- Basic settings
-vim.opt.number = false
-vim.opt.tabstop = 4
-vim.opt.shiftwidth = 4
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 vim.opt.mouse = ""
 vim.opt.clipboard = "unnamedplus"
 vim.opt.termguicolors = true
+vim.opt.completeopt = { "menuone", "noselect", "popup" }
+vim.opt.winborder = "rounded"
+vim.opt.swapfile = false
+vim.opt.pumheight = 10
+
 vim.cmd("set path+=**")
+vim.g.netrw_banner = 0
+
+vim.o.ignorecase = true
+vim.o.smartcase = true
+vim.o.smartindent = true
+vim.o.scrolloff = 109
+vim.o.splitright = true
+
+-- Key maps
+vim.keymap.set({'n', 'i'}, '<C-h>', '<C-w>h')
+vim.keymap.set({'n', 'i'}, '<C-j>', '<C-w>j')
+vim.keymap.set({'n', 'i'}, '<C-k>', '<C-w>k')
+vim.keymap.set({'n', 'i'}, '<C-l>', '<C-w>l')
 
 -- Plugins
 vim.cmd([[
@@ -14,62 +32,113 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-Plug 'nvim-tree/nvim-tree.lua'
-Plug 'nvim-tree/nvim-web-devicons'
-Plug 'nvim-lualine/lualine.nvim'
-Plug 'rebelot/kanagawa.nvim'
-Plug 'hrsh7th/nvim-cmp'
-Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
 
 call plug#end()
-colorscheme kanagawa-wave
 ]])
 
-local lspconfig = require("lspconfig")
+-- Appearance
+vim.cmd.colorscheme "catppuccin-macchiato"
 
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
-
-require("lspconfig").ols.setup({
-  cmd = { "ols" },
-  filetypes = { "odin" },
-  root_dir = require("lspconfig").util.root_pattern("ols.json", ".git"),
-  capabilities = capabilities,
+-- Diagnostics
+vim.diagnostic.config({
+    virtual_text = true,
+    underline = true,
+    update_in_insert = false,
 })
 
+-- LSP
 
-require("nvim-treesitter.configs").setup {
-    ensure_installed = { "odin", "lua", "c", "go", "rust" },
+-- Go
+vim.lsp.enable('gopls')
+
+require("lspconfig")["gopls"].setup({
+	on_attach = function(client, bufnr)
+      vim.lsp.completion.enable(true, client.id, bufnr, {
+		autotrigger = true,
+		convert = function(item)
+          return { abbr = item.label:gsub("%b()", "") }
+		end,
+      })
+      vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
+    end
+})
+
+-- Odin
+vim.lsp.enable('ols')
+
+require("lspconfig")["ols"].setup({
+	on_attach = function(client, bufnr)
+      vim.lsp.completion.enable(true, client.id, bufnr, {
+		autotrigger = true,
+		convert = function(item)
+          return { abbr = item.label:gsub("%b()", "") }
+		end,
+      })
+      vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
+    end
+})
+
+-- C/C++
+vim.lsp.enable('clangd')
+
+require("lspconfig")["clangd"].setup({
+	on_attach = function(client, bufnr)
+      vim.lsp.completion.enable(true, client.id, bufnr, {
+		autotrigger = true,
+		convert = function(item)
+          return { abbr = item.label:gsub("%b()", "") }
+		end,
+      })
+      vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
+    end
+})
+
+-- Lua
+-- vim.lsp.enable('lua_ls')
+--
+-- require("lspconfig")["lua_ls"].setup({
+-- 	on_attach = function(client, bufnr)
+--       vim.lsp.completion.enable(true, client.id, bufnr, {
+-- 		autotrigger = true,
+-- 		convert = function(item)
+--           return { abbr = item.label:gsub("%b()", "") }
+-- 		end,
+--       })
+--       vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
+--     end
+-- })
+
+-- Statusline
+local function status_line() 
+  local mode = "%-5{%v:lua.string.upper(v:lua.vim.fn.mode())%}"
+  local file_name = "%-.16t"
+  local buf_nr = "[%n]"
+  local modified = " %-m"
+  local file_type = " %y"
+  local right_align = "%="
+  local line_no = "%10([%l/%L%)]"
+  local pct_thru_file = "%5p%%"
+
+  return string.format(
+    "%s%s%s%s%s%s%s%s",
+    mode,
+    file_name,
+    buf_nr,
+    modified,
+    file_type,
+    right_align,
+    line_no,
+    pct_thru_file
+  )
+end
+
+vim.opt.statusline = status_line()
+
+-- Treesitter
+require'nvim-treesitter.configs'.setup {
     highlight = {
         enable = true,
+        additional_vim_regex_highlighting = false,
     },
 }
-
-require("nvim-tree").setup()
-
-require("lualine").setup {
-    options = {
-        theme = "auto"
-    }
-}
-
--- Autocompletion setup (NO snippet support)
-local cmp = require("cmp")
-cmp.setup({
-  completion = {
-    autocomplete = { require("cmp.types").cmp.TriggerEvent.TextChanged },
-  },
-  mapping = cmp.mapping.preset.insert({
-    ["<Tab>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
-    ["<S-Tab>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
-    ["<CR>"] = cmp.mapping.confirm({ select = true }),
-    ["<C-Space>"] = cmp.mapping.complete(),
-  }),
-  sources = cmp.config.sources({
-    { name = "nvim_lsp" },
-  }),
-  experimental = {
-    ghost_text = true,
-  },
-})
-
-vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
