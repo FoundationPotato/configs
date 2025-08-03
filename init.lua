@@ -26,6 +26,8 @@ vim.keymap.set({'n', 'i'}, '<C-j>', '<C-w>j')
 vim.keymap.set({'n', 'i'}, '<C-k>', '<C-w>k')
 vim.keymap.set({'n', 'i'}, '<C-l>', '<C-w>l')
 
+vim.keymap.set({'i'}, '<C-Space>', '<C-x><C-o>')
+
 -- Plugins
 vim.cmd([[
 call plug#begin('~/.vim/plugged')
