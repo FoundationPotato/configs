@@ -1,0 +1,33 @@
+unbind r
+bind r source-file .tmux.conf
+
+set -g prefix C-x
+
+set -g mouse on
+
+bind-key h select-pane -L
+bind-key l select-pane -R
+bind-key j select-pane -D
+bind-key k select-pane -U
+
+bind | split-window -h
+bind - split-window -v
+unbind '"'
+unbind %
+
+bind j choose-window 'join-pane -h -s "%%"'
+bind J choose-window 'join-pane -s "%%"'
+
+set -g status-bg black
+set -g status-fg white
+
+set-option -g status-left-length 30
+set-option -g status-justify centre
+
+set-option -sa terminal-overrides ",xterm*:Tc"
+
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+
+set -g @ressurect-strategy-nvim 'session'
+
+run '~/.tmux/plugins/tpm/tpm'

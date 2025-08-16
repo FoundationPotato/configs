@@ -34,6 +34,8 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'junegunn/fzf'
+Plug 'junegunn/fzf.vim'
 Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
 
 call plug#end()
@@ -141,6 +143,6 @@ vim.opt.statusline = status_line()
 require'nvim-treesitter.configs'.setup {
     highlight = {
         enable = true,
-        additional_vim_regex_highlighting = false,
+        additional_vim_regex_highlighting = true,
     },
 }
