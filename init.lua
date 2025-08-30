@@ -6,7 +6,7 @@ vim.opt.expandtab = true
 vim.opt.mouse = ""
 vim.opt.clipboard = "unnamedplus"
 vim.opt.termguicolors = true
-vim.opt.completeopt = { "menuone", "noselect", "popup" }
+vim.opt.completeopt = { "menu", "menuone", "popup", "fuzzy", "noinsert", "noselect" }
 vim.opt.winborder = "rounded"
 vim.opt.swapfile = false
 vim.opt.pumheight = 10
@@ -17,7 +17,7 @@ vim.g.netrw_banner = 0
 vim.o.ignorecase = true
 vim.o.smartcase = true
 vim.o.smartindent = true
-vim.o.scrolloff = 109
+vim.o.scrolloff = 10
 vim.o.splitright = true
 
 -- Key maps
@@ -26,7 +26,6 @@ vim.keymap.set({'n', 'i'}, '<C-j>', '<C-w>j')
 vim.keymap.set({'n', 'i'}, '<C-k>', '<C-w>k')
 vim.keymap.set({'n', 'i'}, '<C-l>', '<C-w>l')
 
-vim.keymap.set({'i'}, '<C-Space>', '<C-x><C-o>')
 
 -- Plugins
 vim.cmd([[
@@ -49,70 +48,49 @@ vim.diagnostic.config({
     virtual_text = true,
     underline = true,
     update_in_insert = false,
-    wrap =true,
+    wrap = true,
 })
 
 -- LSP
+local lspconfig = require('lspconfig')
+
+local on_attach = function(client, bufnr)
+  local buf_map = function(mode, lhs, rhs)
+    vim.api.nvim_buf_set_keymap(bufnr, mode, lhs, rhs, {noremap=true, silent=true})
+  end
+
+  vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
+  -- hover docs
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', {noremap=true, silent=true})
+end
+-- trigger omnifunc on '.' and 'C-n'
+vim.keymap.set({'i'}, '<C-n>', '<C-x><C-o>', {noremap=true})
+vim.api.nvim_set_keymap('i', '.', '.<C-x><C-o>', {noremap=true})
+vim.api.nvim_set_keymap('i', '<Tap>', 'pumvisible() ? "<C-n>" : "<Tab>"', {expr=true, noremap=true})
+vim.api.nvim_set_keymap('i', '<S-Tap>', 'pumvisible() ? "<C-p>" : "<S-Tab>"', {expr=true, noremap=true})
+
 
 -- Go
-vim.lsp.enable('gopls')
-
-require("lspconfig")["gopls"].setup({
-	on_attach = function(client, bufnr)
-      vim.lsp.completion.enable(true, client.id, bufnr, {
-		autotrigger = true,
-		convert = function(item)
-          return { abbr = item.label:gsub("%b()", "") }
-		end,
-      })
-      vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
-    end
-})
+lspconfig.gopls.setup {
+  on_attach = on_attach,
+  filetypes = {"go", "gomod"},
+  root_dir = lspconfig.util.root_pattern("go.work", "go.mod", ".git"),
+  cmd = {"gopls"},
+}
 
 -- Odin
-vim.lsp.enable('ols')
-
-require("lspconfig")["ols"].setup({
-	on_attach = function(client, bufnr)
-      vim.lsp.completion.enable(true, client.id, bufnr, {
-		autotrigger = true,
-		convert = function(item)
-          return { abbr = item.label:gsub("%b()", "") }
-		end,
-      })
-      vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
-    end
-})
+lspconfig.ols.setup {
+  on_attach = on_attach,
+  filetypes = {"odin"},
+  cmd = {"ols"},
+}
 
 -- C/C++
-vim.lsp.enable('clangd')
-
-require("lspconfig")["clangd"].setup({
-	on_attach = function(client, bufnr)
-      vim.lsp.completion.enable(true, client.id, bufnr, {
-		autotrigger = true,
-		convert = function(item)
-          return { abbr = item.label:gsub("%b()", "") }
-		end,
-      })
-      vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
-    end
-})
-
--- Lua
--- vim.lsp.enable('lua_ls')
---
--- require("lspconfig")["lua_ls"].setup({
--- 	on_attach = function(client, bufnr)
---       vim.lsp.completion.enable(true, client.id, bufnr, {
--- 		autotrigger = true,
--- 		convert = function(item)
---           return { abbr = item.label:gsub("%b()", "") }
--- 		end,
---       })
---       vim.keymap.set("i", "<C-space>", vim.lsp.completion.get, { desc = "trigger autocompletion" })
---     end
--- })
+lspconfig.clangd.setup {
+  on_attach = on_attach,
+  filetypes = {"c", "cpp", "h", "hpp"},
+  cmd = {"clangd"},
+}
 
 -- Statusline
 local function status_line() 

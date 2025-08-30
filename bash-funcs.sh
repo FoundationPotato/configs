@@ -20,10 +20,6 @@ function source-bash {
   source ~/.bashrc
 }
 
-function parse_git_branch {
-     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
-}
-
-PS1="\[\e[95m\]\\u@\\h: \[\e[96m\]\\W\\[\e[97m\] $(parse_git_branch)\[\e[00m\]$ "
+PS1="\[\e[95m\]\\u@\\h: \[\e[96m\]\\W\\[\e[97m\] $ "
 
 # End bash funcs
