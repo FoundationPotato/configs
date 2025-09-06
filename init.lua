@@ -26,22 +26,26 @@ vim.keymap.set({'n', 'i'}, '<C-j>', '<C-w>j')
 vim.keymap.set({'n', 'i'}, '<C-k>', '<C-w>k')
 vim.keymap.set({'n', 'i'}, '<C-l>', '<C-w>l')
 
-
 -- Plugins
 vim.cmd([[
 call plug#begin('~/.vim/plugged')
 
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
+Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-nvim-lsp'
+
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
-Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
+
+Plug 'vague2k/vague.nvim'
 
 call plug#end()
 ]])
 
 -- Appearance
-vim.cmd.colorscheme "catppuccin-macchiato"
+vim.cmd.colorscheme "vague"
 
 -- Diagnostics
 vim.diagnostic.config({
@@ -54,43 +58,42 @@ vim.diagnostic.config({
 -- LSP
 local lspconfig = require('lspconfig')
 
-local on_attach = function(client, bufnr)
-  local buf_map = function(mode, lhs, rhs)
-    vim.api.nvim_buf_set_keymap(bufnr, mode, lhs, rhs, {noremap=true, silent=true})
-  end
+-- local on_attach = function(client, bufnr)
+--   local buf_map = function(mode, lhs, rhs)
+--     vim.api.nvim_buf_set_keymap(bufnr, mode, lhs, rhs, {noremap=true, silent=true})
+--   end
+--
+--   vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
+--   -- hover docs
+--   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', {noremap=true, silent=true})
+-- end
+-- -- trigger omnifunc on 'C-n'
+-- vim.keymap.set({'i'}, '<C-n>', '<C-x><C-o>', {noremap=true})
+-- vim.api.nvim_set_keymap('i', '<Tap>', 'pumvisible() ? "<C-n>" : "<Tab>"', {expr=true, noremap=true})
+-- vim.api.nvim_set_keymap('i', '<S-Tap>', 'pumvisible() ? "<C-p>" : "<S-Tab>"', {expr=true, noremap=true})
 
-  vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
-  -- hover docs
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', {noremap=true, silent=true})
-end
--- trigger omnifunc on '.' and 'C-n'
-vim.keymap.set({'i'}, '<C-n>', '<C-x><C-o>', {noremap=true})
-vim.api.nvim_set_keymap('i', '.', '.<C-x><C-o>', {noremap=true})
-vim.api.nvim_set_keymap('i', '<Tap>', 'pumvisible() ? "<C-n>" : "<Tab>"', {expr=true, noremap=true})
-vim.api.nvim_set_keymap('i', '<S-Tap>', 'pumvisible() ? "<C-p>" : "<S-Tab>"', {expr=true, noremap=true})
+-- bash
+vim.lsp.enable('bashls')
 
+-- nvim-cmp
+local cmp = require('cmp')
 
--- Go
-lspconfig.gopls.setup {
-  on_attach = on_attach,
-  filetypes = {"go", "gomod"},
-  root_dir = lspconfig.util.root_pattern("go.work", "go.mod", ".git"),
-  cmd = {"gopls"},
-}
-
--- Odin
-lspconfig.ols.setup {
-  on_attach = on_attach,
-  filetypes = {"odin"},
-  cmd = {"ols"},
-}
-
--- C/C++
-lspconfig.clangd.setup {
-  on_attach = on_attach,
-  filetypes = {"c", "cpp", "h", "hpp"},
-  cmd = {"clangd"},
-}
+cmp.setup({
+  window = {
+    completion = cmp.config.window.bordered(),
+    documentation = cmp.config.window.bordered(),
+  },
+  mapping = cmp.mapping.preset.insert({
+    ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<C-n>'] = cmp.mapping.complete(),
+    ['<C-e>'] = cmp.mapping.abort(),
+    ['<CR>'] = cmp.mapping.confirm({select = true}),
+  }),
+  sources = cmp.config.sources({
+    {name = 'nvim_lsp'},
+  }),
+})
 
 -- Statusline
 local function status_line() 
