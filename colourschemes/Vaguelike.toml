@@ -1,0 +1,65 @@
+[colors]
+# Base colors
+foreground = "#cdcdcd"
+background = "#131415"
+cursor_bg = "#cdcdcd"
+cursor_fg = "#18191a"
+cursor_border = "#cdcdcd"
+selection_fg = "#cdcdcd"
+selection_bg = "#3c3836"
+
+# Scrollbar
+scrollbar_thumb = "#3c3836"
+
+# ANSI colors (0-7)
+ansi = [
+  "#0f1011", # black
+  "#d2788c", # red (muted pink-red)
+  "#8db8a8", # green (muted sage)
+  "#e6b99d", # yellow (muted peach)
+  "#8bb8df", # blue (muted sky blue)
+  "#c397d8", # magenta (muted purple)
+  "#7cb8bb", # cyan (muted teal)
+  "#cdcdcd", # white
+]
+
+# Bright ANSI colors (8-15)
+brights = [
+  "#3c3836", # bright black (gray)
+  "#e09cb0", # bright red
+  "#a5c9b8", # bright green
+  "#f0c9b0", # bright yellow
+  "#a3c9e8", # bright blue
+  "#d4ade8", # bright magenta
+  "#93c8cb", # bright cyan
+  "#f5f5f5", # bright white
+]
+
+# Tab bar colors
+[colors.tab_bar]
+background = "#0f1011"
+
+[colors.tab_bar.active_tab]
+bg_color = "#3c3836"
+fg_color = "#cdcdcd"
+
+[colors.tab_bar.inactive_tab]
+bg_color = "#18191a"
+fg_color = "#878787"
+
+[colors.tab_bar.inactive_tab_hover]
+bg_color = "#2d2d2d"
+fg_color = "#cdcdcd"
+
+[colors.tab_bar.new_tab]
+bg_color = "#18191a"
+fg_color = "#878787"
+
+[colors.tab_bar.new_tab_hover]
+bg_color = "#2d2d2d"
+fg_color = "#cdcdcd"
+
+[metadata]
+name = "Vaguelike"
+author = "me"
+origin_url = ""

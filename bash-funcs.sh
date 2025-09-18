@@ -20,6 +20,14 @@ function source-bash {
   source ~/.bashrc
 }
 
+function edit-vim {
+  nvim ~/.config/nvim/init.lua
+}
+
+function git_branch {
+  git branch 2>/dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+
 PS1="\[\e[95m\]\\u@\\h: \[\e[96m\]\\W\\[\e[97m\] $ "
 
 # End bash funcs
