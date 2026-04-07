@@ -13,7 +13,6 @@ set showmode
 set showmatch
 set hlsearch
 
-set path+=**
 set wildmenu
 set wildmode=list:longest
 set wildignore=*.docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx
@@ -26,24 +25,6 @@ filetype indent on
 let g:netrw_banner=0
 
 syntax on
-
-" PLUGINS ------------------------------------------
-
-call plug#begin('~/.vim/plugged')
-
-Plug 'menisadi/kanagawa.vim'
-Plug 'neoclide/coc.vim', {'branch': 'release'}
-
-call plug#end()
-
-" VIMSCRIPT --------------------------------------
-
-
-" enable code folding
-augroup filetype_vim
-    autocmd!
-    autocmd FileType vim setlocal foldmethod=marker
-augroup END
 
 " STATUSLINE --------------------------------------
 set statusline=

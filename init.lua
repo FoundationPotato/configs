@@ -1,7 +1,8 @@
 vim.opt.number = true
 vim.opt.relativenumber = true
-vim.opt.tabstop = 2
-vim.opt.shiftwidth = 2
+vim.opt.tabstop = 4
+vim.opt.wrap = false
+vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.mouse = ""
 vim.opt.clipboard = "unnamedplus"
@@ -10,8 +11,13 @@ vim.opt.completeopt = { "menu", "menuone", "popup", "fuzzy", "noinsert", "nosele
 vim.opt.winborder = "rounded"
 vim.opt.swapfile = false
 vim.opt.pumheight = 10
+vim.opt.list = true
+vim.opt.listchars = {
+    tab = '> ',
+    space = '·',
+    trail = '·',
+}
 
-vim.cmd("set path+=**")
 vim.g.netrw_banner = 0
 
 vim.o.ignorecase = true
@@ -22,33 +28,54 @@ vim.o.splitright = true
 
 vim.o.updatetime = 200
 
+vim.g.mapleader = "#"
+
 -- Key maps
 vim.keymap.set({'n', 'i'}, '<C-h>', '<C-w>h')
 vim.keymap.set({'n', 'i'}, '<C-j>', '<C-w>j')
 vim.keymap.set({'n', 'i'}, '<C-k>', '<C-w>k')
 vim.keymap.set({'n', 'i'}, '<C-l>', '<C-w>l')
 
+vim.keymap.set('n', '<leader>t', ':ToggleHeaderSource<CR>')
+vim.keymap.set('n', '<leader>e', ':GoErrBlock<CR>')
+vim.keymap.set('n', '<leader>f', ':Files<CR>')
+vim.keymap.set('n', '<leader>b', ':Buffers<CR>')
+vim.keymap.set('n', '<leader>n', ':noh<CR>')
+
+vim.keymap.set('n', '<leader>\\', ':vsplit<CR>')
+vim.keymap.set('n', '<leader>-', ':split<CR>')
+vim.keymap.set('n', '<leader>x', ':close<CR>')
+vim.keymap.set('n', '<leader>o', ':only<CR>')
+vim.keymap.set({'v', 'n'}, "<leader>y", '"*y')
+vim.keymap.set({'v', 'n'}, "<leader>p", '"*p')
+
+-- Edit nvim config
+vim.api.nvim_create_user_command('EditNvimConfig', function()
+    vim.cmd('edit ~/.config/nvim/init.lua')
+end, {})
+
+-- Edit shell config
+vim.api.nvim_create_user_command('EditShellConfig', function()
+    vim.cmd('edit ~/.bashrc')
+end, {})
+
 -- Plugins
-vim.cmd([[
-call plug#begin('~/.vim/plugged')
-
-Plug 'neovim/nvim-lspconfig'
-Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-Plug 'junegunn/fzf'
-Plug 'junegunn/fzf.vim'
-
-Plug 'hrsh7th/nvim-cmp'
-Plug 'hrsh7th/cmp-nvim-lsp'
-
-Plug 'nvim-lualine/lualine.nvim'
-
-Plug 'vague2k/vague.nvim'
-
-call plug#end()
-]])
+vim.pack.add({
+'https://github.com/neovim/nvim-lspconfig',
+'https://github.com/nvim-treesitter/nvim-treesitter',
+'https://github.com/junegunn/fzf',
+'https://github.com/junegunn/fzf.vim',
+'https://github.com/hrsh7th/nvim-cmp',
+'https://github.com/hrsh7th/cmp-nvim-lsp',
+'https://github.com/nvim-lualine/lualine.nvim',
+'https://github.com/navarasu/onedark.nvim',
+})
 
 -- Appearance
-vim.cmd.colorscheme "vague"
+require('onedark').setup {
+    style = 'dark'
+}
+require('onedark').load()
 
 require('lualine').setup()
 
@@ -70,29 +97,24 @@ vim.api.nvim_create_autocmd("CursorHold", {
 })
 
 -- LSP
-local lspconfig = require('lspconfig')
+
+-- lua
+vim.lsp.enable('lua_ls')
 
 -- Go
-lspconfig.gopls.setup {
-  on_attach = on_attach,
-  filetypes = {"go", "gomod"},
-  root_dir = lspconfig.util.root_pattern("go.work", "go.mod", ".git"),
-  cmd = {"gopls"},
-}
+vim.lsp.enable('gopls')
 
 -- Odin
-lspconfig.ols.setup {
-  on_attach = on_attach,
-  filetypes = {"odin"},
-  cmd = {"ols"},
-}
+vim.lsp.enable('ols')
 
 -- C/C++
-lspconfig.clangd.setup {
-  on_attach = on_attach,
-  filetypes = {"c", "cpp", "h", "hpp"},
-  cmd = {"clangd"},
-}
+vim.lsp.enable('clangd')
+
+-- Rust
+vim.lsp.enable('rust_analyzer')
+
+-- Zig
+vim.lsp.enable('zls')
 
 -- nvim-cmp
 local cmp = require('cmp')
@@ -117,9 +139,69 @@ cmp.setup({
 })
 
 -- Treesitter
-require'nvim-treesitter.configs'.setup {
-    highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = true,
-    },
-}
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'go', 'odin' },
+  callback = function() vim.treesitter.start() end,
+})
+
+-- commands
+
+vim.api.nvim_create_user_command("ToggleHeaderSource", function()
+  local filename = vim.fn.expand("%:t:r")   -- basename without extension
+  local ext = vim.fn.expand("%:e")          -- extension
+  local current_dir = vim.fn.expand("%:p:h") -- current file's directory
+
+  -- Directories to search.
+  -- Add your project-specific include/source paths here.
+  local search_dirs = {
+    current_dir,
+    current_dir .. "/..",
+    current_dir .. "/../include",
+    current_dir .. "/../src",
+    "include",
+    "src",
+  }
+
+  local candidates = {}
+  if vim.tbl_contains({ "cpp", "cc", "c" }, ext) then
+    candidates = { ".h", ".hpp", ".hh" }
+  elseif vim.tbl_contains({ "h", "hpp", "hh" }, ext) then
+    candidates = { ".cpp", ".cc", ".c" }
+  end
+
+  for _, dir in ipairs(search_dirs) do
+    for _, e in ipairs(candidates) do
+      local try = dir .. "/" .. filename .. e
+      if vim.fn.filereadable(try) == 1 then
+        vim.cmd("edit " .. try)
+        return
+      end
+    end
+  end
+
+  print("No corresponding file found in search paths.")
+end, {})
+
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "go",
+  callback = function()
+    vim.api.nvim_create_user_command('GoErrBlock', function()
+      local row = vim.api.nvim_win_get_cursor(0)[1]  -- current cursor line (1-indexed)
+      local indent = vim.fn.indent(row)              -- get current line's indentation
+
+      -- Build the block with correct indentation
+      local lines = {
+        string.rep(" ", indent) .. "if err != nil {",
+        string.rep(" ", indent + vim.bo.shiftwidth), -- blank line (will have inner indent)
+        string.rep(" ", indent) .. "}",
+      }
+
+      -- Insert lines after current line
+      vim.api.nvim_buf_set_lines(0, row, row, false, lines)
+
+      -- Move cursor to the middle blank line at correct indentation
+      vim.api.nvim_win_set_cursor(0, { row + 2, indent + vim.bo.shiftwidth })
+    end, { desc = "Insert Go error handling block" })
+  end,
+})
