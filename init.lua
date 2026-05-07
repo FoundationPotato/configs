@@ -12,11 +12,7 @@ vim.opt.winborder = "rounded"
 vim.opt.swapfile = false
 vim.opt.pumheight = 10
 vim.opt.list = true
-vim.opt.listchars = {
-    tab = '> ',
-    space = '·',
-    trail = '·',
-}
+vim.opt.guicursor = "n-v-i-c:block-Cursor"
 
 vim.g.netrw_banner = 0
 
@@ -48,6 +44,9 @@ vim.keymap.set('n', '<leader>x', ':close<CR>')
 vim.keymap.set('n', '<leader>o', ':only<CR>')
 vim.keymap.set({'v', 'n'}, "<leader>y", '"*y')
 vim.keymap.set({'v', 'n'}, "<leader>p", '"*p')
+
+-- yank to clipboard
+vim.keymap.set({'n', 'v'}, '<leader>y', '"+y')
 
 -- Edit nvim config
 vim.api.nvim_create_user_command('EditNvimConfig', function()
@@ -86,7 +85,7 @@ vim.diagnostic.config({
   signs = true,
   float = {
     border = "rounded",
-    source = "always",
+    source = true,
   },
 })
 
@@ -99,6 +98,55 @@ vim.api.nvim_create_autocmd("CursorHold", {
 -- LSP
 
 -- lua
+vim.lsp.config('lua_ls', {
+  on_init = function(client)
+    if client.workspace_folders then
+      local path = client.workspace_folders[1].name
+      if
+        path ~= vim.fn.stdpath('config')
+        and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
+      then
+        return
+      end
+    end
+
+    client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+      runtime = {
+        -- Tell the language server which version of Lua you're using (most
+        -- likely LuaJIT in the case of Neovim)
+        version = 'LuaJIT',
+        -- Tell the language server how to find Lua modules same way as Neovim
+        -- (see `:h lua-module-load`)
+        path = {
+          'lua/?.lua',
+          'lua/?/init.lua',
+        },
+      },
+      -- Make the server aware of Neovim runtime files
+      workspace = {
+        checkThirdParty = false,
+        library = {
+          vim.env.VIMRUNTIME,
+          -- For LSP Settings Type Annotations: https://github.com/neovim/nvim-lspconfig#lsp-settings-type-annotations
+          vim.api.nvim_get_runtime_file("lua/lspconfig", false)[1],
+          -- Depending on the usage, you might want to add additional paths
+          -- here.
+          -- '${3rd}/luv/library',
+          -- '${3rd}/busted/library',
+        },
+        -- Or pull in all of 'runtimepath'.
+        -- NOTE: this is a lot slower and will cause issues when working on
+        -- your own configuration.
+        -- See https://github.com/neovim/nvim-lspconfig/issues/3189
+        -- library = vim.api.nvim_get_runtime_file('', true),
+      },
+    })
+  end,
+  settings = {
+    Lua = {},
+  },
+})
+
 vim.lsp.enable('lua_ls')
 
 -- Go
@@ -146,62 +194,3 @@ vim.api.nvim_create_autocmd('FileType', {
 
 -- commands
 
-vim.api.nvim_create_user_command("ToggleHeaderSource", function()
-  local filename = vim.fn.expand("%:t:r")   -- basename without extension
-  local ext = vim.fn.expand("%:e")          -- extension
-  local current_dir = vim.fn.expand("%:p:h") -- current file's directory
-
-  -- Directories to search.
-  -- Add your project-specific include/source paths here.
-  local search_dirs = {
-    current_dir,
-    current_dir .. "/..",
-    current_dir .. "/../include",
-    current_dir .. "/../src",
-    "include",
-    "src",
-  }
-
-  local candidates = {}
-  if vim.tbl_contains({ "cpp", "cc", "c" }, ext) then
-    candidates = { ".h", ".hpp", ".hh" }
-  elseif vim.tbl_contains({ "h", "hpp", "hh" }, ext) then
-    candidates = { ".cpp", ".cc", ".c" }
-  end
-
-  for _, dir in ipairs(search_dirs) do
-    for _, e in ipairs(candidates) do
-      local try = dir .. "/" .. filename .. e
-      if vim.fn.filereadable(try) == 1 then
-        vim.cmd("edit " .. try)
-        return
-      end
-    end
-  end
-
-  print("No corresponding file found in search paths.")
-end, {})
-
-
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "go",
-  callback = function()
-    vim.api.nvim_create_user_command('GoErrBlock', function()
-      local row = vim.api.nvim_win_get_cursor(0)[1]  -- current cursor line (1-indexed)
-      local indent = vim.fn.indent(row)              -- get current line's indentation
-
-      -- Build the block with correct indentation
-      local lines = {
-        string.rep(" ", indent) .. "if err != nil {",
-        string.rep(" ", indent + vim.bo.shiftwidth), -- blank line (will have inner indent)
-        string.rep(" ", indent) .. "}",
-      }
-
-      -- Insert lines after current line
-      vim.api.nvim_buf_set_lines(0, row, row, false, lines)
-
-      -- Move cursor to the middle blank line at correct indentation
-      vim.api.nvim_win_set_cursor(0, { row + 2, indent + vim.bo.shiftwidth })
-    end, { desc = "Insert Go error handling block" })
-  end,
-})
