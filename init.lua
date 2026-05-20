@@ -7,20 +7,22 @@ vim.opt.expandtab = true
 vim.opt.mouse = ""
 vim.opt.clipboard = "unnamedplus"
 vim.opt.termguicolors = true
-vim.opt.completeopt = { "menu", "menuone", "popup", "fuzzy", "noinsert", "noselect" }
 vim.opt.winborder = "rounded"
 vim.opt.swapfile = false
-vim.opt.pumheight = 10
 vim.opt.list = true
 vim.opt.guicursor = "n-v-i-c:block-Cursor"
 
 vim.g.netrw_banner = 0
-
 vim.o.ignorecase = true
 vim.o.smartcase = true
 vim.o.smartindent = true
 vim.o.scrolloff = 10
 vim.o.splitright = true
+
+vim.o.complete = ".,o"
+vim.o.completeopt = "menu,menuone,popup,fuzzy,noinsert,noselect"
+vim.o.autocomplete = true
+vim.o.pumheight = 7
 
 vim.o.updatetime = 200
 
@@ -32,8 +34,6 @@ vim.keymap.set({'n', 'i'}, '<C-j>', '<C-w>j')
 vim.keymap.set({'n', 'i'}, '<C-k>', '<C-w>k')
 vim.keymap.set({'n', 'i'}, '<C-l>', '<C-w>l')
 
-vim.keymap.set('n', '<leader>t', ':ToggleHeaderSource<CR>')
-vim.keymap.set('n', '<leader>e', ':GoErrBlock<CR>')
 vim.keymap.set('n', '<leader>f', ':Files<CR>')
 vim.keymap.set('n', '<leader>b', ':Buffers<CR>')
 vim.keymap.set('n', '<leader>n', ':noh<CR>')
@@ -58,23 +58,22 @@ vim.api.nvim_create_user_command('EditShellConfig', function()
     vim.cmd('edit ~/.bashrc')
 end, {})
 
+-- Edit wezterm config
+vim.api.nvim_create_user_command('EditWeztermConfig', function()
+    vim.cmd('edit ~/.wezterm.lua')
+end, {})
+
 -- Plugins
 vim.pack.add({
 'https://github.com/neovim/nvim-lspconfig',
-'https://github.com/nvim-treesitter/nvim-treesitter',
 'https://github.com/junegunn/fzf',
 'https://github.com/junegunn/fzf.vim',
-'https://github.com/hrsh7th/nvim-cmp',
-'https://github.com/hrsh7th/cmp-nvim-lsp',
 'https://github.com/nvim-lualine/lualine.nvim',
-'https://github.com/navarasu/onedark.nvim',
+'https://github.com/vague-theme/vague.nvim',
 })
 
 -- Appearance
-require('onedark').setup {
-    style = 'dark'
-}
-require('onedark').load()
+vim.cmd.colorscheme('vague')
 
 require('lualine').setup()
 
@@ -96,6 +95,20 @@ vim.api.nvim_create_autocmd("CursorHold", {
 })
 
 -- LSP
+vim.api.nvim_create_autocmd('LspAttach', {
+    callback = function(args)
+        local bufnr = args.buf
+        local map = function(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, {buffer = bufnr, desc = desc})
+        end
+
+        map('n', 'K', vim.lsp.buf.hover, 'LSP Hover')
+        map('n', 'gd', vim.lsp.buf.definition, 'Go to definition')
+        map('n', 'gD', vim.lsp.buf.declaration, 'Go to declaration')
+        map('n', 'gi', vim.lsp.buf.implementation, 'Go to implementation')
+        map('n', 'gr', vim.lsp.buf.references, 'References')
+    end,
+})
 
 -- lua
 vim.lsp.config('lua_ls', {
@@ -164,33 +177,4 @@ vim.lsp.enable('rust_analyzer')
 -- Zig
 vim.lsp.enable('zls')
 
--- nvim-cmp
-local cmp = require('cmp')
-
-cmp.setup({
-  window = {
-    completion = cmp.config.window.bordered(),
-    documentation = cmp.config.window.bordered(),
-  },
-  mapping = cmp.mapping.preset.insert({
-    ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-    ['<C-f>'] = cmp.mapping.scroll_docs(4),
-    ['<Tab>'] = cmp.mapping.select_next_item(),
-    ['<S-Tab>'] = cmp.mapping.select_prev_item(),
-    ['<C-n>'] = cmp.mapping.complete(),
-    ['<C-e>'] = cmp.mapping.abort(),
-    ['<CR>'] = cmp.mapping.confirm({select = true}),
-  }),
-  sources = cmp.config.sources({
-    {name = 'nvim_lsp'},
-  }),
-})
-
--- Treesitter
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'go', 'odin' },
-  callback = function() vim.treesitter.start() end,
-})
-
 -- commands
-

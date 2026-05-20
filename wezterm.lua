@@ -2,17 +2,19 @@ local wezterm = require("wezterm")
 
 local config = wezterm.config_builder()
 
+config.term = 'wezterm'
+
 config.window_decorations = "TITLE | RESIZE"
 
 config.font_size = 12
 config.font = wezterm.font('JetBrains Mono')
-config.color_scheme = "OneDark (base16)"
+config.color_scheme = "Vaguelike"
 
 config.enable_tab_bar = true
 config.use_fancy_tab_bar = false
 config.show_new_tab_button_in_tab_bar = false
 
-local scheme = wezterm.color.get_builtin_schemes()['OneDark (base16)']
+local scheme = wezterm.color.load_scheme(".config/wezterm/colors/Vaguelike.toml")
 config.colors = {
     tab_bar = {
         background = scheme.background,
