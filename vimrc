@@ -1,3 +1,3 @@
 set number
 set relativenumber
-syntax = true
+syntax on

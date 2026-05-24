@@ -65,11 +65,22 @@ end, {})
 
 -- Plugins
 vim.pack.add({
-'https://github.com/neovim/nvim-lspconfig',
-'https://github.com/junegunn/fzf',
-'https://github.com/junegunn/fzf.vim',
-'https://github.com/nvim-lualine/lualine.nvim',
-'https://github.com/vague-theme/vague.nvim',
+{
+    src = 'https://github.com/neovim/nvim-lspconfig',
+    version = 'f6738ef65dabade340b473d4ff2a1ad3352c10e7'
+},
+{
+    src = 'https://github.com/junegunn/fzf.vim',
+    version = 'b9b98ac5741afd2d0aa1e09f24b1614d4c91f15a'
+},
+{
+    src = 'https://github.com/vague-theme/vague.nvim',
+    version = '4abd79d6fbaca57bf437763d0b5bed364e4512bd'
+},
+{
+    src = 'https://github.com/nvim-lualine/lualine.nvim',
+    version = '131a558e13f9f28b15cd235557150ccb23f89286'
+},
 })
 
 -- Appearance

@@ -52,6 +52,27 @@ config.keys = {
             direction = 'Right',
         },
     },
+    -- switch pane
+    {
+        key = 'H',
+        mods = 'CTRL',
+        action = wezterm.action.ActivatePaneDirection('Left')
+    },
+    {
+        key = 'J',
+        mods = 'CTRL',
+        action = wezterm.action.ActivatePaneDirection('Down')
+    },
+    {
+        key = 'K',
+        mods = 'CTRL',
+        action = wezterm.action.ActivatePaneDirection('Up')
+    },
+    {
+        key = 'L',
+        mods = 'CTRL',
+        action = wezterm.action.ActivatePaneDirection('Right')
+    },
     -- Close current pane
     {
         key = 'x',

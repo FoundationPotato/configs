@@ -1,0 +1,14 @@
+# Begin shell copy
+
+alias ls='ls --color=auto --group-directories-first'
+alias grep='grep --color=auto'
+alias tree='tree -a -I '.git''
+alias vi='nvim'
+alias fvi='nvim $(fzf)'
+alias edit-bash='nvim ~/.bashrc'
+alias edit-wez='nvim ~/.wezterm.lua'
+alias edit-nvim='nvim ~/.config/nvim/init.lua'
+
+export PS1="\[\e[95m\]\\u@\\h:\[\e[96m\]\\W:\e[93m\]\$(git branch 2>/dev/null | grep '^*' | colrm 1 2) \[\e[97m\]> "
+
+# End shell copy
